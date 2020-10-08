@@ -1,16 +1,10 @@
-PROGRAM GetFiveLines(INPUT, OUTPUT);
-USES CRT;
+PROGRAM MAIN(INPUT, OUTPUT);
+//USES CRT;
 
-
+FUNCTION GetWord(VAR FIN: TEXT): UNICODESTRING;
 VAR
-	FIN, FOUT: TEXT;
-	FindString, Line: STRING;
-	Index: INTEGER;
-
-FUNCTION GetWord(VAR FIN: TEXT):STRING;
-VAR
-	TempString: STRING;
-	Ch: CHAR;
+	TempString: UNICODESTRING;
+	Ch: UNICODECHAR;
 BEGIN
 	TempString := '';
 	WHILE NOT(EOLN(FIN) OR EOF(FIN)) DO
@@ -18,7 +12,7 @@ BEGIN
 		READ(FIN, Ch);
 		IF Ch = ' ' THEN
 		BEGIN
-			IF ORD(TempString[0]) > 0 THEN BREAK
+			IF LENGTH(TempString) > 0 THEN BREAK
 		END
 		ELSE TempString := TempString + Ch;
 	END;
@@ -26,42 +20,42 @@ BEGIN
 	READLN(FIN)
 END;
 
-FUNCTION Minimum(FirstNum, SecondNum: CHAR): CHAR;
+FUNCTION Minimum(FirstNum, SecondNum: INTEGER): INTEGER;
 BEGIN
 	Minimum := FirstNum;
 	IF FirstNum > SecondNum THEN Minimum := SecondNum
 END;
 
-FUNCTION ChangeRegisterChar(Ch: CHAR): CHAR;
+FUNCTION ChangeRegisterChar(Ch: UNICODECHAR): UNICODECHAR;
 BEGIN
 	IF (Ch >= 'a') AND (Ch <= 'z') THEN
 		Ch := CHR(ORD(Ch) + (ORD('A') - ORD('a')));
-	IF (Ch >= 'а') AND (Ch <= 'я') THEN
-		Ch := CHR(ORD(Ch) + (ORD('А') - ORD('а')));
+	IF (Ch >= 'Р°') AND (Ch <= 'СЏ') THEN
+		Ch := CHR(ORD(Ch) + (ORD('Рђ') - ORD('Р°')));
 	ChangeRegisterChar := Ch;
 END;
 
-FUNCTION ChangeRegisterWord(SourceWord: STRING): STRING;
+FUNCTION ChangeRegisterWord(SourceWord: UNICODESTRING): UNICODESTRING;
 VAR
 	Index: INTEGER;
 BEGIN
 	ChangeRegisterWord := '';
-	FOR Index := 1 TO ORD(SourceWord[0]) DO
+	FOR Index := 1 TO LENGTH(SourceWord) DO
 	BEGIN
 		ChangeRegisterWord := ChangeRegisterWord + ChangeRegisterChar(SourceWord[Index]);
 	END
 END;
 
-FUNCTION WordComparison(FirstWord, SecondWord: STRING): BOOLEAN;
+FUNCTION WordComparison(FirstWord, SecondWord: UNICODESTRING): BOOLEAN;
 VAR
 	Index: INTEGER;
 BEGIN
 	WordComparison := TRUE;
-	FOR Index := 0 TO ORD(Minimum(FirstWord[0], SecondWord[0])) DO
+	FOR Index := 0 TO Minimum(LENGTH(FirstWord), LENGTH(SecondWord)) DO
 		IF FirstWord[Index] <> SecondWord[Index] THEN WordComparison := FALSE
 END;
 
-FUNCTION CutString(SourceString: STRING; Start, Count: INTEGER): STRING;
+FUNCTION CutString(SourceString: UNICODESTRING; Start, Count: INTEGER): UNICODESTRING;
 VAR
 	Index: INTEGER;
 BEGIN
@@ -70,23 +64,28 @@ BEGIN
 		CutString := CutString + SourceString[Index]
 END;
 
-FUNCTION SearchWord(SourceString, FindWord: STRING):BOOLEAN;
+FUNCTION SearchWord(SourceString, FindWord: UNICODESTRING):BOOLEAN;
 VAR
 	Index: INTEGER;
 BEGIN
 	SearchWord := FALSE;
-	IF SourceString[0] >= FindWord[0] THEN
-		FOR Index := 1 TO ORD(SourceString[0]) DO
-			IF WordComparison(FindWord, CutString(SourceString, Index, ORD(FindWord[0]))) THEN
+	IF LENGTH(SourceString) >= LENGTH(FindWord) THEN
+		FOR Index := 1 TO LENGTH(SourceString) DO
+			IF WordComparison(FindWord, CutString(SourceString, Index, LENGTH(FindWord))) THEN
 			BEGIN
 				IF (SourceString[Index - 1] IN [' ', '''', '"']) AND
-				   (SourceString[Index + ORD(FindWord[0])] IN [' ', ',', '.', '!', '?', ':', ';', '''', '"']) THEN
+				   (SourceString[Index + LENGTH(FindWord)] IN [' ', ',', '.', '!', '?', ':', ';', '''', '"']) THEN
 			   	BEGIN
 					SearchWord := TRUE;
 					BREAK
 				END
 			END
 END;
+
+VAR
+	FIN, FOUT: TEXT;
+	FindString, Line: UNICODESTRING;
+	Index: INTEGER;
 
 BEGIN
 	IF PARAMCOUNT = 2 THEN
@@ -98,7 +97,7 @@ BEGIN
 		{$I+}
 		IF IORESULT <> 0 THEN
 		BEGIN
-			WRITELN(OUTPUT, 'Не удалось открыть файл: ', PARAMSTR(1));
+			WRITELN(OUTPUT, 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р»: ', PARAMSTR(1));
 			HALT
 		END;
 		{$I-}
@@ -106,11 +105,16 @@ BEGIN
 		{$I+}
 		IF IORESULT <> 0 THEN
 		BEGIN
-			WRITELN(OUTPUT, 'Не удалось открыть файл: ', PARAMSTR(2));
+			WRITELN(OUTPUT, 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р»: ', PARAMSTR(2));
 			HALT
 		END;
 
 		FindString := GetWord(INPUT);
+		IF FindString = '' THEN 
+		BEGIN
+			WRITELN(OUTPUT, 'Р’С‹ РІРІРµР»Рё РјРЅРѕРіРѕ РїСЂРѕР±РµР»РѕРІ Рё РЅРё РѕРґРЅРѕР№ Р±СѓРєРІС‹ :РЎ');
+			HALT
+		END;
 		WHILE NOT EOF(FIN) DO
 		BEGIN
 			READLN(FIN, Line);
@@ -121,7 +125,8 @@ BEGIN
 					IF NOT EOF(FIN) THEN
 					BEGIN
 						READLN(FIN, Line);
-						WRITELN(FOUT, Line)
+						WRITE(FOUT, Line);
+						IF Index <> 4 THEN WRITELN(FOUT)
 					END
 					ELSE
 						BREAK;
@@ -131,12 +136,12 @@ BEGIN
 				BREAK
 			END
 		END;
-		WRITELN(OUTPUT, 'Слово не было найдено в тексте');
+		WRITELN(OUTPUT, 'РЎР»РѕРІРѕ РЅРµ Р±С‹Р»Рѕ РЅР°Р№РґРµРЅРѕ РІ С‚РµРєСЃС‚Рµ');
 		CLOSE(FIN);
 		CLOSE(FOUT);
 		HALT
 	END;
 
-	WRITELN(OUTPUT, 'Не верное количество аргументов: ', PARAMCOUNT + 1, #13 + #10 + 'Ожидалось: 3' + #13 + #10 + '[имя программы] [имя входного файла] [имя выходного файла]')
+	WRITELN(OUTPUT, 'РќРµ РІРµСЂРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ Р°СЂРіСѓРјРµРЅС‚РѕРІ: ', PARAMCOUNT + 1, #13 + #10 + 'РћР¶РёРґР°Р»РѕСЃСЊ: 3' + #13 + #10 + '[РёРјСЏ РїСЂРѕРіСЂР°РјРјС‹] [РёРјСЏ РІС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°] [РёРјСЏ РІС‹С…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°]')
 
 END.
